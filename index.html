@@ -74,16 +74,18 @@
   }
 
   .notify-form{
-    display:flex; gap:10px; width:100%; max-width:440px; margin-bottom:14px;
-    background:#fff; padding:6px; border-radius:10px;
+    display:flex; flex-direction:column; gap:8px; width:100%; max-width:380px; margin-bottom:14px;
+    background:#fff; padding:10px; border-radius:12px;
   }
   .notify-form input{
-    flex:1; border:none; outline:none; padding:12px 14px; font-size:14.5px; font-family:'Roboto',sans-serif;
-    border-radius:7px; color:var(--ink);
+    border:1px solid var(--line); outline:none; padding:12px 14px; font-size:14.5px; font-family:'Roboto',sans-serif;
+    border-radius:7px; color:var(--ink); width:100%;
   }
+  .notify-form input:focus{border-color:var(--rust);}
   .notify-form button{
     background:var(--rust); color:#fff; font-weight:700; font-size:14.5px; border:none;
     padding:12px 22px; border-radius:7px; cursor:pointer; white-space:nowrap; transition:background .15s ease;
+    width:100%;
   }
   .notify-form button:hover{background:var(--rust-dark);}
   .form-hint{font-size:12.5px; color:#B9B4A6;}
@@ -110,9 +112,6 @@
   @media (max-width:640px){
     h1{font-size:34px;}
     .sub{font-size:14.5px;}
-    .notify-form{flex-direction:column; background:transparent; padding:0; gap:8px;}
-    .notify-form input{background:#fff; border-radius:8px;}
-    .notify-form button{width:100%; justify-content:center;}
     header{padding:20px 5%;}
     .social-row a{width:30px; height:30px;}
   }
@@ -142,13 +141,17 @@
     <h1>El <span>Marketplace outdoor</span> en donde las personas se unen</h1>
     <p class="sub">Compra y vende equipamiento de camping, trekking, escalada y más — entre la comunidad aventurera más grande de la región. Estamos afinando los últimos detalles.</p>
 
-    <form class="notify-form" id="notifyForm" onsubmit="event.preventDefault(); showSuccess();">
-      <input type="email" id="notifyEmail" placeholder="tu@correo.cl" required>
+    <form class="notify-form" id="notifyForm">
+      <input type="text" id="notifyName" name="nombre" placeholder="Tu nombre" required>
+      <input type="email" id="notifyEmail" name="email" placeholder="tu@correo.cl" required>
       <button type="submit">Avísame</button>
     </form>
     <div id="successMsg">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
       ¡Listo! Te avisaremos apenas abramos.
+    </div>
+    <div id="errorMsg" style="display:none; color:#F2B9B0; font-size:13px; margin-bottom:8px;">
+      Hubo un problema al enviar. Probá de nuevo en un momento.
     </div>
     <p class="form-hint" id="formHint">Sin spam. Solo un correo cuando estemos listos.</p>
 
@@ -168,11 +171,46 @@
 </div>
 
 <script>
+  // 1) Creá una cuenta gratis en https://formspree.io
+  // 2) Creá un formulario nuevo, te da una URL tipo https://formspree.io/f/xxxxabcd
+  // 3) Reemplazá el valor de abajo por esa URL
+  const FORMSPREE_ENDPOINT = "https://formspree.io/f/xnpqlpyj";
+
+  document.getElementById('notifyForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const email = document.getElementById('notifyEmail').value;
+    const btn = this.querySelector('button');
+    const originalText = btn.textContent;
+    btn.textContent = 'Enviando...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: new FormData(document.getElementById('notifyForm'))
+      });
+      if(res.ok){
+        showSuccess();
+      } else {
+        showError();
+      }
+    } catch(err){
+      showError();
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  });
+
   function showSuccess(){
     document.getElementById('notifyForm').style.display = 'none';
     document.getElementById('formHint').style.display = 'none';
-    const el = document.getElementById('successMsg');
-    el.style.display = 'flex';
+    document.getElementById('errorMsg').style.display = 'none';
+    document.getElementById('successMsg').style.display = 'flex';
+  }
+  function showError(){
+    document.getElementById('errorMsg').style.display = 'block';
   }
 </script>
 </body>
